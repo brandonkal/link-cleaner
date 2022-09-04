@@ -15,9 +15,11 @@ document
     plausible('Bulk Clean Link')
     // Read settings
     var youtubeShortenEnabled = document.getElementById(
-      'youtube-shorten-check'
+      'setting_youtube-shorten-check'
     ).checked
-    var vxTwitterEnabled = document.getElementById('vxTwitter-check').checked
+    var vxTwitterEnabled = document.getElementById(
+      'setting_vxTwitter-check'
+    ).checked
     // Split comma-separated or newline-seperated input into array and trim whitespace
     var oldLinks = document
       .getElementById('link-bulk-input')

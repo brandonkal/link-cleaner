@@ -26,23 +26,24 @@ function cleanLink(
     var oldLink = new URL(hrefLink)
   }
 
-  let newLink = pureCleaning(oldLink)
-
   // Shorten YouTube links if enabled
   if (oldLink.host.includes('youtube.com') && youtubeShortenEnabled) {
-    newLink.host = 'youtu.be'
-    newLink.pathname = '/' + oldLink.searchParams.get('v')
-    newLink.searchParams.delete('v')
+    oldLink.host = 'youtu.be'
+    oldLink.pathname = '/' + oldLink.searchParams.get('v')
+    oldLink.searchParams.delete('v')
   }
   // Use vxTwitter if enabled
   if (oldLink.host.includes('twitter.com') && vxTwitterEnabled) {
-    newLink.host = 'vxtwitter.com'
+    oldLink.host = 'vxtwitter.com'
   }
+
+  let newLink = pureCleaning(oldLink.toString())
+
   // Save to history
   addToHistory(newLink)
   // Switch to output
   console.log('New link:', newLink)
-  return newLink.toString()
+  return newLink
 }
 
 // Function for adding result to link clean history
@@ -87,6 +88,11 @@ Object.entries(localStorage).forEach(function (key) {
     return true
   }
   // Load setting
-  console.log('Loaded setting:', key)
-  document.getElementById(key[0]).checked = JSON.parse(key[1])
+  if (typeof key === 'string' && key.contains('setting_')) {
+    console.log('Loaded setting:', key)
+    let el = document.getElementById(key[0])
+    if (el) {
+      el.checked = JSON.parse(key[1])
+    }
+  }
 })

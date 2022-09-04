@@ -1316,7 +1316,7 @@ const RULES = {
     },
   },
 }
-"use strict";
+;('use strict')
 /*
  * ClearURLs
  * Copyright (c) 2017-2022 Kevin Röbert.
@@ -1339,61 +1339,59 @@ const RULES = {
  * Models a hash parameter of a given {@link URL}.
  */
 class URLHashParams {
-    constructor(url) {
-        Object.defineProperty(this, "_params", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        this._params = new Multimap();
-        const hash = url.hash.slice(1);
-        const params = hash.split('&');
-        for (const p of params) {
-            const param = p.split('=');
-            if (!param[0])
-                continue;
-            const key = param[0];
-            let value = null;
-            if (param.length === 2 && param[1]) {
-                value = param[1];
-            }
-            this._params.put(key, value);
-        }
+  constructor(url) {
+    Object.defineProperty(this, '_params', {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: void 0,
+    })
+    this._params = new Multimap()
+    const hash = url.hash.slice(1)
+    const params = hash.split('&')
+    for (const p of params) {
+      const param = p.split('=')
+      if (!param[0]) continue
+      const key = param[0]
+      let value = null
+      if (param.length === 2 && param[1]) {
+        value = param[1]
+      }
+      this._params.put(key, value)
     }
-    append(name, value = null) {
-        this._params.put(name, value);
+  }
+  append(name, value = null) {
+    this._params.put(name, value)
+  }
+  delete(name) {
+    this._params.delete(name)
+  }
+  get(name) {
+    const [first] = this._params.get(name)
+    if (first) {
+      return first
     }
-    delete(name) {
-        this._params.delete(name);
-    }
-    get(name) {
-        const [first] = this._params.get(name);
-        if (first) {
-            return first;
-        }
-        return null;
-    }
-    getAll(name) {
-        return this._params.get(name);
-    }
-    keys() {
-        return this._params.keys();
-    }
-    toString() {
-        const rtn = [];
-        this._params.forEach((key, value) => {
-            if (value) {
-                rtn.push(key + '=' + value);
-            }
-            else {
-                rtn.push(key);
-            }
-        });
-        return rtn.join('&');
-    }
+    return null
+  }
+  getAll(name) {
+    return this._params.get(name)
+  }
+  keys() {
+    return this._params.keys()
+  }
+  toString() {
+    const rtn = []
+    this._params.forEach((key, value) => {
+      if (value) {
+        rtn.push(key + '=' + value)
+      } else {
+        rtn.push(key)
+      }
+    })
+    return rtn.join('&')
+  }
 }
-"use strict";
+;('use strict')
 /*
  * ClearURLs
  * Copyright (c) 2017-2022 Kevin Röbert.
@@ -1416,112 +1414,111 @@ class URLHashParams {
  * Models a multimap backed by a {@link Set}.
  */
 class Multimap {
-    constructor() {
-        Object.defineProperty(this, "_map", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_size", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        this._size = 0;
-        this._map = new Map();
+  constructor() {
+    Object.defineProperty(this, '_map', {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: void 0,
+    })
+    Object.defineProperty(this, '_size', {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: void 0,
+    })
+    this._size = 0
+    this._map = new Map()
+  }
+  get size() {
+    return this._size
+  }
+  get(key) {
+    const values = this._map.get(key)
+    if (values) {
+      return new Set(values)
+    } else {
+      return new Set()
     }
-    get size() {
-        return this._size;
+  }
+  put(key, value) {
+    let values = this._map.get(key)
+    if (!values) {
+      values = new Set()
     }
-    get(key) {
-        const values = this._map.get(key);
-        if (values) {
-            return new Set(values);
+    const count = values.size
+    values.add(value)
+    if (values.size === count) {
+      return false
+    }
+    this._map.set(key, values)
+    this._size++
+    return true
+  }
+  has(key) {
+    return this._map.has(key)
+  }
+  hasEntry(key, value) {
+    const values = this._map.get(key)
+    if (!values) {
+      return false
+    }
+    return values.has(value)
+  }
+  delete(key) {
+    const values = this._map.get(key)
+    if (values && this._map.delete(key)) {
+      this._size -= values.size
+      return true
+    }
+    return false
+  }
+  deleteEntry(key, value) {
+    const values = this._map.get(key)
+    if (values) {
+      if (!values.delete(value)) {
+        return false
+      }
+      this._size--
+      return true
+    }
+    return false
+  }
+  clear() {
+    this._map.clear()
+    this._size = 0
+  }
+  entries() {
+    const self = this
+    function* gen() {
+      for (const [key, values] of self._map.entries()) {
+        for (const value of values) {
+          yield [key, value]
         }
-        else {
-            return new Set();
-        }
+      }
     }
-    put(key, value) {
-        let values = this._map.get(key);
-        if (!values) {
-            values = new Set();
-        }
-        const count = values.size;
-        values.add(value);
-        if (values.size === count) {
-            return false;
-        }
-        this._map.set(key, values);
-        this._size++;
-        return true;
+    return gen()
+  }
+  values() {
+    const self = this
+    function* gen() {
+      for (const [, value] of self.entries()) {
+        yield value
+      }
     }
-    has(key) {
-        return this._map.has(key);
+    return gen()
+  }
+  keys() {
+    return this._map.keys()
+  }
+  forEach(callback, thisArg) {
+    for (const [key, value] of this.entries()) {
+      callback.call(thisArg === undefined ? this : thisArg, key, value, this)
     }
-    hasEntry(key, value) {
-        const values = this._map.get(key);
-        if (!values) {
-            return false;
-        }
-        return values.has(value);
-    }
-    delete(key) {
-        const values = this._map.get(key);
-        if (values && this._map.delete(key)) {
-            this._size -= values.size;
-            return true;
-        }
-        return false;
-    }
-    deleteEntry(key, value) {
-        const values = this._map.get(key);
-        if (values) {
-            if (!values.delete(value)) {
-                return false;
-            }
-            this._size--;
-            return true;
-        }
-        return false;
-    }
-    clear() {
-        this._map.clear();
-        this._size = 0;
-    }
-    entries() {
-        const self = this;
-        function* gen() {
-            for (const [key, values] of self._map.entries()) {
-                for (const value of values) {
-                    yield [key, value];
-                }
-            }
-        }
-        return gen();
-    }
-    values() {
-        const self = this;
-        function* gen() {
-            for (const [, value] of self.entries()) {
-                yield value;
-            }
-        }
-        return gen();
-    }
-    keys() {
-        return this._map.keys();
-    }
-    forEach(callback, thisArg) {
-        for (const [key, value] of this.entries()) {
-            callback.call(thisArg === undefined ? this : thisArg, key, value, this);
-        }
-    }
-    [Symbol.iterator]() {
-        return this.entries();
-    }
+  }
+  [Symbol.iterator]() {
+    return this.entries()
+  }
 }
 /*
  * ClearURLs
@@ -1676,7 +1673,6 @@ function loadOldDataFromStore() {
 function increaseCleanedCounter() {
   if (storage.statisticsStatus) {
     storage.cleanedCounter++
-    deferSaveOnDisk('cleanedCounter')
   }
 }
 
@@ -2026,7 +2022,6 @@ function start() {
       storage.dataHash = ''
       changeIcon()
       storeHashStatus(5)
-      saveOnExit()
     }
   }
 
@@ -2055,7 +2050,6 @@ function start() {
           } else {
             toObject(storage.ClearURLsData)
             storeHashStatus(1)
-            saveOnDisk(['hashStatus'])
           }
         } else {
           throw 'The status code was not okay or the given hash were empty.'
@@ -2104,7 +2098,6 @@ function start() {
           }
           storage.ClearURLsData = JSON.parse(storage.ClearURLsData)
           toObject(storage.ClearURLsData)
-          saveOnDisk(['ClearURLsData', 'dataHash', 'hashStatus'])
         } else {
           throw 'The status code was not okay or the given rules were empty.'
         }
@@ -2439,13 +2432,6 @@ var hasPendingSaves = false
 var pendingSaves = new Set()
 
 /**
- * Writes the storage variable to the disk.
- */
-function saveOnExit() {
-  saveOnDisk(Object.keys(storage))
-}
-
-/**
  * Returns the storage as JSON.
  */
 function storageAsJSON() {
@@ -2475,24 +2461,6 @@ function storageDataAsString(key) {
     default:
       return value
   }
-}
-
-/**
- * Schedule to save a key to disk in 30 seconds.
- * @param  {String} key
- */
-function deferSaveOnDisk(key) {
-  if (hasPendingSaves) {
-    pendingSaves.add(key)
-    return
-  }
-
-  setTimeout(function () {
-    saveOnDisk(Array.from(pendingSaves))
-    pendingSaves.clear()
-    hasPendingSaves = false
-  }, 30000)
-  hasPendingSaves = true
 }
 
 /**
@@ -2553,13 +2521,11 @@ function setData(key, value) {
       // migrate from old key
       storage['totalCounter'] = value
       delete storage[key]
-      saveOnExit()
       break
     case 'globalCounter':
       // migrate from old key
       storage['cleanedCounter'] = value
       delete storage[key]
-      saveOnExit()
       break
     default:
       storage[key] = value
