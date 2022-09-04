@@ -2025,92 +2025,6 @@ function start() {
     }
   }
 
-  /**
-   * Get the hash for the rule file on GitLab.
-   * Check the hash with the hash form the local file.
-   * If the hash has changed, then download the new rule file.
-   * Else do nothing.
-   */
-  function getHash() {
-    //Get the target hash from GitLab
-    const response = fetch(storage.hashURL).then(async (response) => {
-      return {
-        hash: (await response.text()).trim(),
-        status: response.status,
-      }
-    })
-
-    response
-      .then((result) => {
-        if (result.status === 200 && result.hash) {
-          dataHash = result.hash
-
-          if (dataHash !== localDataHash.trim()) {
-            fetchFromURL()
-          } else {
-            toObject(storage.ClearURLsData)
-            storeHashStatus(1)
-          }
-        } else {
-          throw 'The status code was not okay or the given hash were empty.'
-        }
-      })
-      .catch((error) => {
-        console.error(
-          '[ClearURLs]: Could not download the rules hash from the given URL due to the following error: ',
-          error
-        )
-        dataHash = false
-        deactivateOnFailure()
-      })
-  }
-
-  /*
-   * ##################################################################
-   * # Fetch Rules & Exception from URL                               #
-   * ##################################################################
-   */
-  function fetchFromURL() {
-    const response = fetch(storage.ruleURL).then(async (response) => {
-      return {
-        data: (await response.clone().text()).trim(),
-        hash: await sha256((await response.text()).trim()),
-        status: response.status,
-      }
-    })
-
-    response
-      .then((result) => {
-        if (result.status === 200 && result.data) {
-          if (result.hash === dataHash.trim()) {
-            storage.ClearURLsData = result.data
-            storage.dataHash = result.hash
-            storeHashStatus(2)
-          } else {
-            storeHashStatus(3)
-            console.error(
-              'The hash does not match. Expected `' +
-                result.hash +
-                '` got `' +
-                dataHash.trim() +
-                '`'
-            )
-          }
-          storage.ClearURLsData = JSON.parse(storage.ClearURLsData)
-          toObject(storage.ClearURLsData)
-        } else {
-          throw 'The status code was not okay or the given rules were empty.'
-        }
-      })
-      .catch((error) => {
-        console.error(
-          '[ClearURLs]: Could not download the rules from the given URL due to the following error: ',
-          error
-        )
-        deactivateOnFailure()
-      })
-  }
-
   // ##################################################################
 
   /*
@@ -2402,7 +2316,8 @@ function start() {
    */
 
   loadOldDataFromStore()
-  getHash()
+  toObject(storage.ClearURLsData)
+  storeHashStatus(1) // Make it Up to date
 }
 /*
  * ClearURLs
@@ -2469,10 +2384,6 @@ function storageDataAsString(key) {
 function genesis() {
   initStorage({})
   start()
-  //   browser.storage.local.get(null).then((items) => {
-
-  //     // Start the clearurls.js
-  //   }, handleError)
 }
 
 /**
@@ -2550,7 +2461,7 @@ function initStorage(items) {
  * Set default values for the settings.
  */
 function initSettings() {
-  storage.ClearURLsData = []
+  storage.ClearURLsData = RULES
   storage.dataHash = ''
   storage.badgedStatus = true
   storage.globalStatus = true
